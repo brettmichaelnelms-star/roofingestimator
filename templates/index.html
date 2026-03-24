@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Odessa Roofing, Inc. — Professional Estimate Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --steel:      #7a9ab5;
+  --steel-light:#b8cfde;
+  --steel-dark: #2a4a62;
+  --slate:      #1a2530;
+  --slate-mid:  #243340;
+  --cream:      #f0f4f8;
+  --ink:        #0d1a24;
+  --muted:      #6a7f8f;
+  --danger:     #c0392b;
+  --success:    #1e6e45;
+  --info:       #1a4a6e;
+  --radius:     4px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--slate);
+  color: var(--cream);
+  min-height: 100vh;
+  background-image: url("https://images.unsplash.com/photo-1632889479372-27b8a8d97b28?w=1600&q=60");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.overlay {
+  min-height: 100vh;
+  background: linear-gradient(160deg, rgba(10,18,26,0.94) 0%, rgba(15,25,36,0.91) 100%);
+  padding: 0 0 60px;
+}
+
+/* ── HEADER ── */
+.site-header {
+  border-bottom: 1px solid rgba(122,154,181,0.25);
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-mark {
+  width: 48px; height: 48px;
+  border: 2px solid var(--steel);
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.brand h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--steel-light);
+  line-height: 1;
+}
+.brand p {
+  font-size: .75rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── MAIN GRID ── */
+.main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* 3-col on very wide */
+@media (min-width: 1000px) {
+  .main { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .main { grid-template-columns: 1fr; }
+  .site-header { padding: 20px; }
+}
+
+/* ── CARDS ── */
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(122,154,181,0.18);
+  border-radius: 8px;
+  padding: 28px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: var(--steel);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(122,154,181,0.18);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── FIELDS ── */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: .7rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(122,154,181,0.25);
+  border-radius: var(--radius);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .95rem;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color .2s, background .2s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--steel);
+  background: rgba(122,154,181,0.08);
+}
+.field input::placeholder, .field textarea::placeholder { color: rgba(240,244,248,0.25); }
+.field select { cursor: pointer; appearance: none; -webkit-appearance: none; }
+.field select option { background: #1a2530; color: var(--cream); }
+.field textarea { resize: vertical; min-height: 80px; }
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* pitch display badge */
+.pitch-factor {
+  margin-top: 8px;
+  font-size: .8rem;
+  color: var(--steel-light);
+  background: rgba(122,154,181,0.1);
+  border: 1px solid rgba(122,154,181,0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  display: none;
+}
+.pitch-factor.show { display: block; }
+
+/* material badge */
+.material-badge {
+  display: inline-block;
+  font-size: .7rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.mat-shingles { background: rgba(139,105,20,0.3);  color: #e8d5b0; }
+.mat-metal    { background: rgba(70,130,180,0.3);  color: #b8cefb; }
+.mat-tile     { background: rgba(160,82,45,0.3);   color: #f0c8a0; }
+.mat-flat     { background: rgba(80,80,80,0.3);    color: #d0d0d0; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .85rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity .2s, transform .1s;
+  white-space: nowrap;
+}
+.btn:hover   { opacity: .88; }
+.btn:active  { transform: scale(.98); }
+
+.btn-add    { background: var(--success); color: #fff; width: 100%; margin-top: 6px; }
+.btn-delete { background: transparent; color: #e06c6c; border: 1px solid #c0392b; padding: 5px 10px; font-size: .75rem; border-radius: 3px; }
+.btn-email  { background: var(--info); color: #fff; }
+.btn-pdf    { background: var(--steel-dark); color: var(--cream); }
+.btn-clear  { background: transparent; color: #e06c6c; border: 1px solid #c0392b; }
+
+.action-row {
+  max-width: 1100px;
+  margin: 28px auto 0;
+  padding: 0 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── TABLE ── */
+.table-wrap { grid-column: 1 / -1; overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+
+thead tr { background: rgba(122,154,181,0.12); }
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: .68rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--steel);
+  font-weight: 500;
+  border-bottom: 1px solid rgba(122,154,181,0.2);
+}
+tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background .15s; }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody td { padding: 11px 14px; color: rgba(240,244,248,0.85); }
+tbody td.section-name { color: var(--cream); font-weight: 500; }
+
+.empty-state {
+  text-align: center; padding: 32px;
+  color: var(--muted); font-size: .85rem; letter-spacing: .06em;
+}
+
+/* ── RESULTS ── */
+.results-card {
+  grid-column: 1 / -1;
+  background: rgba(122,154,181,0.07);
+  border: 1px solid rgba(122,154,181,0.3);
+  border-radius: 8px;
+  padding: 24px 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+}
+.stat { text-align: center; }
+.stat-label { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.stat-value { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--steel-light); line-height: 1; }
+.stat-value.big { font-size: 2rem; color: var(--steel); }
+.divider { width: 1px; background: rgba(122,154,181,0.2); align-self: stretch; }
+@media (max-width: 600px) { .divider { display: none; } }
+
+/* ── EXTRAS ── */
+.extras-toggle {
+  max-width: 1100px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+}
+.extras-toggle button {
+  background: none;
+  border: 1px dashed rgba(122,154,181,0.4);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .8rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color .2s, border-color .2s;
+}
+.extras-toggle button:hover { color: var(--steel); border-color: var(--steel); }
+.extras-toggle button .chevron { transition: transform .25s; display: inline-block; }
+.extras-toggle button.open .chevron { transform: rotate(180deg); }
+
+.extras-panel { max-width: 1100px; margin: 12px auto 0; padding: 0 20px; display: none; }
+.extras-panel.open { display: block; }
+.extras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(122,154,181,0.18);
+  border-radius: 8px;
+  padding: 20px;
+}
+.extras-grid .field { margin-bottom: 0; }
+.extras-grid .field input { width: 100%; }
+
+/* ── TAX / NOTES ── */
+.meta-row {
+  max-width: 1100px;
+  margin: 24px auto 0;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 16px;
+}
+@media (max-width: 600px) { .meta-row { grid-template-columns: 1fr; } }
+.meta-row .card { padding: 20px 22px; }
+
+
+/* ── DIMENSION INPUTS ── */
+.dim-group {
+  display: grid !important;
+  grid-template-columns: 2fr 2fr 3fr;
+  gap: 5px;
+  align-items: end;
+}
+.dim-group input {
+  padding: 10px 8px !important;
+  font-size: .85rem !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.dim-group select {
+  padding: 10px 6px !important;
+  font-size: .82rem !important;
+  width: 100% !important;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(122,154,181,0.25);
+  border-radius: 4px;
+  color: #f0f4f8;
+  font-family: "DM Sans", sans-serif;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.dim-group select:focus { border-color: #7a9ab5; }
+.dim-group select option { background: #1a2530; color: #f0f4f8; }
+.dim-sublabel {
+  display: grid !important;
+  grid-template-columns: 2fr 2fr 3fr;
+  gap: 5px;
+  margin-top: 3px;
+}
+.dim-sublabel span {
+  font-size: .62rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #6a7f8f;
+  text-align: center;
+}
+
+/* ── MEASURE TOGGLE ── */
+.measure-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 14px;
+  border: 1px solid rgba(122,154,181,0.25);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.measure-toggle button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #6a7f8f;
+  font-family: "DM Sans", sans-serif;
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.measure-toggle button.active {
+  background: rgba(122,154,181,0.18);
+  color: #b8cfde;
+}
+
+/* ── FADE IN ── */
+@keyframes fadeRow {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+tbody tr { animation: fadeRow .2s ease both; }
+</style>
+</head>
+<body>
+<div class="overlay">
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="14,3 26,14 22,14 22,25 6,25 6,14 2,14" fill="none" stroke="#7a9ab5" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="14" y1="3" x2="14" y2="25" stroke="#7a9ab5" stroke-width="1" opacity=".4"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <h1>Odessa Roofing, Inc.</h1>
+      <p>Professional Estimate Tool — Lexington, KY</p>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <div class="main">
+
+    <!-- Customer Info -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Customer Information
+      </div>
+      <div class="field"><label>Full Name</label><input id="customerName" placeholder="John Smith"></div>
+      <div class="field"><label>Address</label><input id="customerAddress" placeholder="456 Elm Street, Dallas TX"></div>
+      <div class="field"><label>Email</label><input id="customerEmail" placeholder="john@example.com" type="email" onchange="if(!this.value) this.value=''"></div>
+      <div class="field">
+        <label>Estimate Valid Until</label>
+        <input id="expiryDate" type="date">
+      </div>
+    </div>
+
+    <!-- Company Info -->
+    <div class="card" style="background:rgba(42,74,98,0.18); border-color:rgba(122,154,181,0.3);">
+      <div class="card-title" style="font-size:.85rem; padding-bottom:10px; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Odessa Roofing, Inc.
+      </div>
+      <p style="font-size:.82rem; color:var(--muted); line-height:1.7;">
+        232 Gold Rush Rd, STE 110<br>
+        Lexington, KY 40503<br>
+        <a href="tel:8592710524" style="color:var(--steel-light); text-decoration:none;">(859) 271-0524</a><br>
+        <a href="/cdn-cgi/l/email-protection#254a4140565644574a4a434c4b4265444a490b464a48" style="color:var(--steel-light); text-decoration:none;"><span class="__cf_email__" data-cfemail="026d6667717163706d6d646b6c6542636d6e2c616d6f">[email&#160;protected]</span></a><br>
+        <a href="https://odessaroofs.com" target="_blank" style="color:var(--steel-light); text-decoration:none;">odessaroofs.com</a>
+      </p>
+      <p style="margin-top:10px; font-size:.75rem; color:var(--muted); font-style:italic;">
+        Owens Corning Preferred · GAF Authorized · CertainTeed Master Applicator
+      </p>
+    </div>
+
+    <!-- Add Roof Section -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 12 18 12 18 22 6 22 6 12 2 12"/></svg>
+        Add Roof Section
+      </div>
+      <div class="field"><label>Section Name</label><input id="sectionName" placeholder="Main Roof / Garage / Addition"></div>
+
+      <!-- Measurement mode toggle -->
+      <div class="measure-toggle">
+        <button id="btnFootprint" class="active" onclick="setMeasureMode('footprint')">
+          ⬜ Flat Footprint (L × W)
+        </button>
+        <button id="btnEave" onclick="setMeasureMode('eave')">
+          📐 Eave + Rafter
+        </button>
+      </div>
+
+      <!-- Footprint mode -->
+      <div id="modeFootprint">
+        <div class="field">
+          <label>Length</label>
+          <div class="dim-group">
+            <input id="fpLenFt" placeholder="ft" type="number" min="0" step="1">
+            <input id="fpLenIn" placeholder="in" type="number" min="0" max="11" step="1">
+            <select id="fpLenFrac">
+              <option value="0">-- frac --</option>
+              <option value="0.0625">1/16</option><option value="0.125">1/8</option>
+              <option value="0.1875">3/16</option><option value="0.25">1/4</option>
+              <option value="0.3125">5/16</option><option value="0.375">3/8</option>
+              <option value="0.4375">7/16</option><option value="0.5">1/2</option>
+              <option value="0.5625">9/16</option><option value="0.625">5/8</option>
+              <option value="0.6875">11/16</option><option value="0.75">3/4</option>
+              <option value="0.8125">13/16</option><option value="0.875">7/8</option>
+              <option value="0.9375">15/16</option>
+            </select>
+          </div>
+          <div class="dim-sublabel"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
+        </div>
+        <div class="field">
+          <label>Width</label>
+          <div class="dim-group">
+            <input id="fpWidFt" placeholder="ft" type="number" min="0" step="1">
+            <input id="fpWidIn" placeholder="in" type="number" min="0" max="11" step="1">
+            <select id="fpWidFrac">
+              <option value="0">-- frac --</option>
+              <option value="0.0625">1/16</option><option value="0.125">1/8</option>
+              <option value="0.1875">3/16</option><option value="0.25">1/4</option>
+              <option value="0.3125">5/16</option><option value="0.375">3/8</option>
+              <option value="0.4375">7/16</option><option value="0.5">1/2</option>
+              <option value="0.5625">9/16</option><option value="0.625">5/8</option>
+              <option value="0.6875">11/16</option><option value="0.75">3/4</option>
+              <option value="0.8125">13/16</option><option value="0.875">7/8</option>
+              <option value="0.9375">15/16</option>
+            </select>
+          </div>
+          <div class="dim-sublabel"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
+        </div>
+      </div>
+
+      <!-- Eave + Rafter mode -->
+      <div id="modeEave" style="display:none">
+        <div class="field">
+          <label>Eave Length <span style="color:var(--muted);font-size:.7rem;font-style:italic">(horizontal run along gutter line)</span></label>
+          <div class="dim-group">
+            <input id="eaveLenFt" placeholder="ft" type="number" min="0" step="1">
+            <input id="eaveLenIn" placeholder="in" type="number" min="0" max="11" step="1">
+            <select id="eaveLenFrac">
+              <option value="0">-- frac --</option>
+              <option value="0.0625">1/16</option><option value="0.125">1/8</option>
+              <option value="0.1875">3/16</option><option value="0.25">1/4</option>
+              <option value="0.3125">5/16</option><option value="0.375">3/8</option>
+              <option value="0.4375">7/16</option><option value="0.5">1/2</option>
+              <option value="0.5625">9/16</option><option value="0.625">5/8</option>
+              <option value="0.6875">11/16</option><option value="0.75">3/4</option>
+              <option value="0.8125">13/16</option><option value="0.875">7/8</option>
+              <option value="0.9375">15/16</option>
+            </select>
+          </div>
+          <div class="dim-sublabel"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
+        </div>
+        <div class="field">
+          <label>Rafter Length <span style="color:var(--muted);font-size:.7rem;font-style:italic">(actual slope distance eave to ridge)</span></label>
+          <div class="dim-group">
+            <input id="rafterFt" placeholder="ft" type="number" min="0" step="1">
+            <input id="rafterIn" placeholder="in" type="number" min="0" max="11" step="1">
+            <select id="rafterFrac">
+              <option value="0">-- frac --</option>
+              <option value="0.0625">1/16</option><option value="0.125">1/8</option>
+              <option value="0.1875">3/16</option><option value="0.25">1/4</option>
+              <option value="0.3125">5/16</option><option value="0.375">3/8</option>
+              <option value="0.4375">7/16</option><option value="0.5">1/2</option>
+              <option value="0.5625">9/16</option><option value="0.625">5/8</option>
+              <option value="0.6875">11/16</option><option value="0.75">3/4</option>
+              <option value="0.8125">13/16</option><option value="0.875">7/8</option>
+              <option value="0.9375">15/16</option>
+            </select>
+          </div>
+          <div class="dim-sublabel"><span>Feet</span><span>Inches</span><span>Fraction</span></div>
+        </div>
+        <div style="font-size:.75rem; color:var(--muted); font-style:italic; margin-bottom:10px;">
+          💡 In Eave + Rafter mode the pitch factor is already built into the rafter length — pitch selector is still used for reference only.
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Roof Pitch</label>
+        <select id="pitch" onchange="updatePitchFactor()">
+          <option value="1.000">Flat / Low slope (0/12 – 2/12)</option>
+          <option value="1.031">3/12  - factor 1.031</option>
+          <option value="1.054">4/12  - factor 1.054</option>
+          <option value="1.083">5/12  - factor 1.083</option>
+          <option value="1.118">6/12  - factor 1.118</option>
+          <option value="1.158">7/12  - factor 1.158</option>
+          <option value="1.202">8/12  - factor 1.202</option>
+          <option value="1.250">9/12  - factor 1.250</option>
+          <option value="1.302">10/12 - factor 1.302</option>
+          <option value="1.357">11/12 - factor 1.357</option>
+          <option value="1.414">12/12 - factor 1.414</option>
+        </select>
+        <div class="pitch-factor" id="pitchInfo"></div>
+      </div>
+
+      <div class="field">
+        <label>Material Type</label>
+        <select id="material">
+          <option value="shingles">Asphalt Shingles</option>
+          <option value="metal">Metal Roofing</option>
+          <option value="tile">Tile / Slate</option>
+          <option value="flat">Flat / TPO / EPDM</option>
+        </select>
+      </div>
+
+      <div class="row-2">
+        <div class="field"><label>Price per Square ($)</label><input id="price" placeholder="95.00" type="number" min="0" step="0.01"></div>
+        <div class="field">
+          <label>Waste %</label>
+          <select id="waste">
+            <option value="10">10% — simple gable</option>
+            <option value="12">12% — moderate</option>
+            <option value="15" selected>15% — standard</option>
+            <option value="18">18% — complex / hip</option>
+            <option value="20">20% — very complex</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn btn-add" onclick="addSection()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Section
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-wrap">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        Roof Section Breakdown
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Material</th>
+            <th>Base Sq Ft</th>
+            <th>Pitch Factor</th>
+            <th>Squares (w/waste)</th>
+            <th>$/Square</th>
+            <th>Section Cost</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="sectionBody">
+          <tr><td colspan="8" class="empty-state">No sections added yet — add your first roof section above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Results -->
+    <div class="results-card" id="resultsCard" style="display:none">
+      <div class="stat">
+        <div class="stat-label">Total Base Sq Ft</div>
+        <div class="stat-value" id="resBaseSqFt">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Pitch-Adj Sq Ft</div>
+        <div class="stat-value" id="resPitchSqFt">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Total Squares</div>
+        <div class="stat-value" id="resSquares">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Subtotal</div>
+        <div class="stat-value" id="resSubtotal">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Tax</div>
+        <div class="stat-value" id="resTax">—</div>
+      </div>
+      <div class="divider"></div>
+      <div class="stat">
+        <div class="stat-label">Total Due</div>
+        <div class="stat-value big" id="resCost">—</div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- Additional Items Toggle -->
+  <div class="extras-toggle">
+    <button id="extrasBtn" onclick="toggleExtras()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Additional Items
+      <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+  </div>
+
+  <!-- Additional Items Panel -->
+  <div class="extras-panel" id="extrasPanel">
+    <div class="extras-grid">
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra1Label" placeholder="Tear-Off / Disposal" style="margin-bottom:6px">
+        <input id="extra1Cost" placeholder="$0.00" type="number" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra2Label" placeholder="Decking / Sheathing">
+        <input id="extra2Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra3Label" placeholder="Gutters / Fascia">
+        <input id="extra3Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra4Label" placeholder="Flashing / Valleys">
+        <input id="extra4Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Item Label</label>
+        <input id="extra5Label" placeholder="Other">
+        <input id="extra5Cost" placeholder="$0.00" type="number" min="0" step="0.01" style="margin-top:6px">
+      </div>
+    </div>
+  </div>
+
+  <!-- Tax / Notes Row -->
+  <div class="meta-row">
+    <div class="card">
+      <div class="card-title" style="font-size:.85rem; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Tax Rate
+      </div>
+      <div class="field" style="margin:0">
+        <label>Sales Tax (%)</label>
+        <input id="taxRate" placeholder="0.00" type="number" min="0" max="30" step="0.01" oninput="if(sections.length) renderTable()">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="font-size:.85rem; margin-bottom:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Estimate Notes
+      </div>
+      <div class="field" style="margin:0">
+        <label>Scope notes, materials spec, special instructions…</label>
+        <textarea id="estimateNotes" placeholder="e.g. Replace all decking in NW quadrant. Customer to clear gutters prior to start. 30-year architectural shingles throughout."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-row">
+    <button class="btn btn-email" onclick="emailEstimate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Email Estimate
+    </button>
+    <button class="btn btn-pdf" onclick="generatePDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Generate PDF
+    </button>
+    <button class="btn btn-clear" onclick="clearEstimate()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      New Estimate
+    </button>
+  </div>
+
+</div><!-- /overlay -->
+
+<script>
+let sections = [];
+
+const MATERIAL_LABELS = {
+  shingles: "Asphalt Shingles",
+  metal:    "Metal Roofing",
+  tile:     "Tile / Slate",
+  flat:     "Flat / TPO"
+};
+
+function updatePitchFactor() {
+  const pitch  = parseFloat(document.getElementById("pitch").value);
+  const info   = document.getElementById("pitchInfo");
+  const select = document.getElementById("pitch");
+  const text   = select.options[select.selectedIndex].text;
+  if (pitch > 1.0) {
+    info.textContent = `Pitch factor ${pitch.toFixed(3)} — flat area will be multiplied by this to get actual roof surface area.`;
+    info.classList.add("show");
+  } else {
+    info.classList.remove("show");
+  }
+}
+
+let measureMode = 'footprint';
+
+function setMeasureMode(mode) {
+  measureMode = mode;
+  document.getElementById('modeFootprint').style.display = mode === 'footprint' ? '' : 'none';
+  document.getElementById('modeEave').style.display      = mode === 'eave'      ? '' : 'none';
+  document.getElementById('btnFootprint').classList.toggle('active', mode === 'footprint');
+  document.getElementById('btnEave').classList.toggle('active', mode === 'eave');
+}
+
+function parseDim(ftId, inId, fracId) {
+  const ft   = parseFloat(document.getElementById(ftId).value)   || 0;
+  const inch = parseFloat(document.getElementById(inId).value)   || 0;
+  const frac = parseFloat(document.getElementById(fracId).value) || 0;
+  return ft + (inch + frac) / 12;
+}
+
+function addSection() {
+  try {
+    const name     = document.getElementById("sectionName").value.trim() || "Unnamed Section";
+    const pitch    = parseFloat(document.getElementById("pitch").value) || 1.0;
+    const material = document.getElementById("material").value;
+    const price    = parseFloat(document.getElementById("price").value);
+    const wastePct = parseFloat(document.getElementById("waste").value) || 15;
+
+    if (!price || price <= 0) {
+      alert("Please enter a price per square.");
+      return;
+    }
+
+    let baseSqFt, pitchSqFt, modeLabel;
+
+    if (measureMode === 'footprint') {
+      const length = parseDim("fpLenFt","fpLenIn","fpLenFrac");
+      const width  = parseDim("fpWidFt","fpWidIn","fpWidFrac");
+      if (length <= 0 || width <= 0) {
+        alert("Please enter a length and width.");
+        return;
+      }
+      baseSqFt  = length * width;
+      pitchSqFt = baseSqFt * pitch;
+      modeLabel = "Footprint";
+    } else {
+      const eave   = parseDim("eaveLenFt","eaveLenIn","eaveLenFrac");
+      const rafter = parseDim("rafterFt","rafterIn","rafterFrac");
+      if (eave <= 0 || rafter <= 0) {
+        alert("Please enter eave length and rafter length.");
+        return;
+      }
+      pitchSqFt = eave * rafter;
+      baseSqFt  = pitchSqFt;
+      modeLabel = "Eave+Rafter";
+    }
+
+    const withWaste   = pitchSqFt * (1 + wastePct / 100);
+    const squares     = withWaste / 100;
+    const sectionCost = squares * price;
+
+    sections.push({ name, baseSqFt, pitchSqFt, pitch, wastePct, squares, price, material, sectionCost, modeLabel });
+    renderTable();
+
+    ["fpLenFt","fpLenIn","fpWidFt","fpWidIn",
+     "eaveLenFt","eaveLenIn","rafterFt","rafterIn","sectionName","price"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+    ["fpLenFrac","fpWidFrac","eaveLenFrac","rafterFrac"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.selectedIndex = 0;
+    });
+    document.getElementById("sectionName").focus();
+
+  } catch(err) {
+    alert("Error adding section: " + err.message);
+  }
+}
+
+function deleteSection(i) {
+  sections.splice(i, 1);
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById("sectionBody");
+  tbody.innerHTML = "";
+
+  if (!sections.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">No sections added yet — add your first roof section above.</td></tr>`;
+    document.getElementById("resultsCard").style.display = "none";
+    return;
+  }
+
+  let totalBase = 0, totalPitch = 0, totalSquares = 0, totalCost = 0;
+
+  sections.forEach((s, i) => {
+    totalBase    += s.baseSqFt;
+    totalPitch   += s.pitchSqFt;
+    totalSquares += s.squares;
+    totalCost    += s.sectionCost;
+
+    const matClass = "mat-" + s.material;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="section-name">${s.name}<span class="material-badge ${matClass}">${MATERIAL_LABELS[s.material]}</span></td>
+      <td>${MATERIAL_LABELS[s.material]}</td>
+      <td>${s.baseSqFt.toFixed(0)} sq ft</td>
+      <td>${s.pitch.toFixed(3)} <span style="color:var(--muted);font-size:.8rem">(+${s.wastePct}% waste)</span></td>
+      <td>${s.squares.toFixed(2)}</td>
+      <td>$${s.price.toFixed(2)}</td>
+      <td>$${s.sectionCost.toFixed(2)}</td>
+      <td><button class="btn btn-delete" onclick="deleteSection(${i})">Remove</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  calculateTotals(totalBase, totalPitch, totalSquares, totalCost);
+}
+
+function getExtras() {
+  return [1,2,3,4,5].map(i => {
+    const label = document.getElementById(`extra${i}Label`).value.trim();
+    const cost  = parseFloat(document.getElementById(`extra${i}Cost`).value) || 0;
+    return { label: label || document.getElementById(`extra${i}Label`).placeholder, cost };
+  }).filter(e => e.cost > 0);
+}
+
+function calculateTotals(totalBase, totalPitch, totalSquares, roofingCost) {
+  const extrasCost = getExtras().reduce((s, e) => s + e.cost, 0);
+  const subtotal   = roofingCost + extrasCost;
+  const taxRate    = parseFloat(document.getElementById("taxRate").value) || 0;
+  const taxAmt     = subtotal * (taxRate / 100);
+  const finalCost  = subtotal + taxAmt;
+
+  const fmt = v => "$" + v.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  document.getElementById("resBaseSqFt").textContent  = totalBase.toFixed(0) + " sq ft";
+  document.getElementById("resPitchSqFt").textContent = totalPitch.toFixed(0) + " sq ft";
+  document.getElementById("resSquares").textContent   = totalSquares.toFixed(2) + " sq";
+  document.getElementById("resSubtotal").textContent  = fmt(subtotal);
+  document.getElementById("resTax").textContent       = taxRate > 0 ? fmt(taxAmt) + " (" + taxRate + "%)" : "—";
+  document.getElementById("resCost").textContent      = fmt(finalCost);
+  document.getElementById("resultsCard").style.display = "grid";
+
+  window.totalSquares  = totalSquares.toFixed(2);
+  window.subtotal      = subtotal.toFixed(2);
+  window.taxAmt        = taxAmt.toFixed(2);
+  window.taxRate       = taxRate;
+  window.totalEstimate = finalCost.toFixed(2);
+}
+
+function toggleExtras() {
+  document.getElementById("extrasBtn").classList.toggle("open");
+  document.getElementById("extrasPanel").classList.toggle("open");
+}
+
+function emailEstimate() {
+  const email   = document.getElementById("customerEmail").value;
+  const name    = document.getElementById("customerName").value;
+  const address = document.getElementById("customerAddress").value;
+  const subject = encodeURIComponent("Odessa Roofing, Inc. — Project Estimate");
+
+  let sectionLines = sections.map(s =>
+    `  ${s.name} (${MATERIAL_LABELS[s.material]}): ${s.squares.toFixed(2)} squares @ $${s.price.toFixed(2)}/sq = $${s.sectionCost.toFixed(2)}`
+  ).join("%0D%0A");
+
+  const extras = getExtras();
+  const extrasLines = extras.length
+    ? "%0D%0AADDITIONAL ITEMS%0D%0A" + extras.map(e => `  ${e.label}: $${e.cost.toFixed(2)}`).join("%0D%0A")
+    : "";
+
+  const expiryRaw = document.getElementById("expiryDate").value;
+  const expiryLine = expiryRaw
+    ? "Estimate Valid Until: " + new Date(expiryRaw + "T00:00:00").toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"}) + "%0D%0A"
+    : "";
+
+  const notes = document.getElementById("estimateNotes").value.trim();
+  const notesLine = notes ? "%0D%0ANOTES%0D%0A" + notes.replace(/\n/g, "%0D%0A") + "%0D%0A" : "";
+
+  const body =
+    "Dear " + name + ",%0D%0A%0D%0A" +
+    "Thank you for choosing Odessa Roofing. Below is your project estimate.%0D%0A%0D%0A" +
+    "Customer: " + name + "%0D%0A" +
+    "Address: " + address + "%0D%0A" +
+    expiryLine + "%0D%0A" +
+    "ROOF SECTION BREAKDOWN%0D%0A" + sectionLines +
+    extrasLines + "%0D%0A%0D%0A" +
+    "Total Squares: " + window.totalSquares + "%0D%0A" +
+    "Subtotal: $" + window.subtotal + "%0D%0A" +
+    (window.taxRate > 0 ? "Sales Tax (" + window.taxRate + "%): $" + window.taxAmt + "%0D%0A" : "") +
+    "TOTAL DUE: $" + window.totalEstimate + "%0D%0A" +
+    notesLine + "%0D%0A" +
+    "We look forward to working with you.%0D%0A%0D%0AKen Evans, Owner%0D%0AOdessa Roofing, Inc.%0D%0A232 Gold Rush Rd, STE 110, Lexington, KY 40503%0D%0A(859) 271-0524  |  odessaroofing@aol.com%0D%0Aodessaroofs.com";
+
+  window.location.href = "mailto:" + email + "?subject=" + encodeURIComponent("Odessa Roofing, Inc. — Project Estimate") + "&body=" + body;
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc     = new jsPDF();
+  const name    = document.getElementById("customerName").value    || "—";
+  const address = document.getElementById("customerAddress").value || "—";
+  const email   = document.getElementById("customerEmail").value   || "—";
+
+  // Header
+  doc.setFillColor(26, 37, 48);
+  doc.rect(0, 0, 210, 36, "F");
+  doc.setTextColor(184, 207, 222);
+  doc.setFont("times", "bold");
+  doc.setFontSize(20);
+  doc.text("Odessa Roofing, Inc.", 14, 16);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(122, 154, 181);
+  doc.text("PROFESSIONAL ESTIMATE", 14, 24);
+  const today = new Date().toLocaleDateString("en-US", {year:"numeric",month:"long",day:"numeric"});
+  doc.text("Date: " + today, 196, 24, {align:"right"});
+
+  // Customer
+  doc.setTextColor(26, 37, 48);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.text("CUSTOMER", 14, 50);
+  doc.setDrawColor(122, 154, 181);
+  doc.line(14, 52, 196, 52);
+  doc.setFont("helvetica", "normal");
+  doc.text("Name: "    + name,    14, 60);
+  doc.text("Address: " + address, 14, 68);
+  doc.text("Email: "   + email,   14, 76);
+
+  const expiryRaw = document.getElementById("expiryDate").value;
+  if (expiryRaw) {
+    const expiryFmt = new Date(expiryRaw + "T00:00:00").toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(180, 50, 30);
+    doc.text("Estimate Valid Until: " + expiryFmt, 14, 84);
+    doc.setTextColor(26, 37, 48);
+    doc.setFont("helvetica", "normal");
+  }
+
+  // Company block (right side of header area)
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(122, 154, 181);
+  doc.text("232 Gold Rush Rd, STE 110, Lexington KY 40503", 196, 14, {align:"right"});
+  doc.text("(859) 271-0524  |  odessaroofing@aol.com", 196, 20, {align:"right"});
+
+  // Section table
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(26, 37, 48);
+  doc.text("ROOF SECTION BREAKDOWN", 14, 98);
+  doc.line(14, 100, 196, 100);
+
+  const colX = [14, 60, 95, 122, 152, 178];
+  const headers = ["Section", "Material", "Base Sq Ft", "Squares", "$/Sq", "Total"];
+  doc.setFontSize(8);
+  doc.setTextColor(42, 74, 98);
+  headers.forEach((h, i) => doc.text(h, colX[i], 109));
+  doc.setDrawColor(160, 190, 210);
+  doc.line(14, 111, 196, 111);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(26, 37, 48);
+  let y = 119;
+
+  sections.forEach((s, idx) => {
+    if (idx % 2 === 0) { doc.setFillColor(240, 244, 248); doc.rect(14, y-6, 182, 9, "F"); }
+    doc.text(s.name.substring(0,18),              colX[0], y);
+    doc.text(MATERIAL_LABELS[s.material].substring(0,14), colX[1], y);
+    doc.text(s.baseSqFt.toFixed(0),               colX[2], y);
+    doc.text(s.squares.toFixed(2),                colX[3], y);
+    doc.text("$" + s.price.toFixed(2),            colX[4], y);
+    doc.text("$" + s.sectionCost.toFixed(2),      colX[5], y);
+    y += 10;
+  });
+
+  // Extras
+  const extras = getExtras();
+  if (extras.length) {
+    y += 4;
+    doc.setDrawColor(122, 154, 181);
+    doc.line(14, y, 196, y);
+    y += 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(42, 74, 98);
+    doc.text("ADDITIONAL ITEMS", 14, y);
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(26, 37, 48);
+    extras.forEach((e, idx) => {
+      if (idx % 2 === 0) { doc.setFillColor(240, 244, 248); doc.rect(14, y-6, 182, 9, "F"); }
+      doc.text(e.label, colX[0], y);
+      doc.text("$" + e.cost.toFixed(2), colX[5], y);
+      y += 10;
+    });
+  }
+
+  // Totals
+  y += 6;
+  doc.setDrawColor(122, 154, 181);
+  doc.line(14, y, 196, y);
+  y += 10;
+
+  const fmtPDF = v => "$" + parseFloat(v).toLocaleString("en-US", {minimumFractionDigits:2});
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(26, 37, 48);
+  doc.text("Total Squares:", 14, y);
+  doc.text(window.totalSquares + " sq", 196, y, {align:"right"});
+  y += 10;
+  doc.text("Subtotal:", 14, y);
+  doc.text(fmtPDF(window.subtotal), 196, y, {align:"right"});
+  y += 10;
+
+  if (window.taxRate > 0) {
+    doc.text("Sales Tax (" + window.taxRate + "%):", 14, y);
+    doc.text(fmtPDF(window.taxAmt), 196, y, {align:"right"});
+    y += 10;
+  }
+
+  doc.setDrawColor(122, 154, 181);
+  doc.line(14, y, 196, y);
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(42, 74, 98);
+  doc.text("TOTAL DUE:", 14, y);
+  doc.text(fmtPDF(window.totalEstimate), 196, y, {align:"right"});
+  y += 16;
+
+  // Notes
+  const notes = document.getElementById("estimateNotes").value.trim();
+  if (notes) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(42, 74, 98);
+    doc.text("NOTES", 14, y);
+    doc.line(14, y+2, 196, y+2);
+    y += 10;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(26, 37, 48);
+    const noteLines = doc.splitTextToSize(notes, 182);
+    doc.text(noteLines, 14, y);
+    y += noteLines.length * 6 + 10;
+  }
+
+  // Signature
+  const sigY = Math.max(y + 10, 230);
+  doc.setDrawColor(122, 154, 181);
+  doc.setLineWidth(0.4);
+  doc.line(14, sigY, 100, sigY);
+  doc.line(116, sigY, 196, sigY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(90, 110, 130);
+  doc.text("Customer Signature", 14, sigY + 5);
+  doc.text("Date", 116, sigY + 5);
+  doc.setLineWidth(0.2);
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(122, 154, 181);
+  doc.text("Odessa Roofing, Inc.  |  232 Gold Rush Rd STE 110, Lexington KY 40503  |  (859) 271-0524  |  odessaroofs.com", 105, 280, {align:"center"});
+  doc.text("Estimate subject to change upon site inspection.", 105, 285, {align:"center"});
+
+  const safeName = name.trim().replace(/[^a-z0-9]/gi, "_");
+  const d = new Date();
+  const dateStr = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  const filename = safeName && safeName !== "—"
+    ? `Roofing_Estimate_${safeName}_${dateStr}.pdf`
+    : `Roofing_Estimate_${Date.now()}.pdf`;
+
+  doc.save(filename);
+}
+
+function clearEstimate() {
+  if (!confirm("Start a new estimate? All current data will be cleared.")) return;
+  ["customerName","customerAddress","customerEmail","expiryDate","taxRate","estimateNotes",
+   "sectionName","price",
+   "fpLenFt","fpLenIn","fpWidFt","fpWidIn",
+   "eaveLenFt","eaveLenIn","rafterFt","rafterIn"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById("extra"+i+"Label").value = "";
+    document.getElementById("extra"+i+"Cost").value  = "";
+  }
+  sections = [];
+  renderTable();
+  document.getElementById("resultsCard").style.display = "none";
+  document.getElementById("extrasPanel").classList.remove("open");
+  document.getElementById("extrasBtn").classList.remove("open");
+  document.getElementById("pitchInfo").classList.remove("show");
+  ["fpLenFrac","fpWidFrac","eaveLenFrac","rafterFrac"].forEach(id => {
+    document.getElementById(id).selectedIndex = 0;
+  });
+  setMeasureMode("footprint");
+  window.totalSquares = window.subtotal = window.taxAmt = window.totalEstimate = "0.00";
+  window.taxRate = 0;
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+  document.getElementById("expiryDate").value = exp.toISOString().split("T")[0];
+  document.getElementById("customerName").focus();
+}
+
+// Default expiry 30 days out
+(function() {
+  const exp = new Date();
+  exp.setDate(exp.getDate() + 30);
+  document.getElementById("expiryDate").value = exp.toISOString().split("T")[0];
+})();
+
+["sectionName","price",
+ "fpLenFt","fpLenIn","fpWidFt","fpWidIn",
+ "eaveLenFt","eaveLenIn","rafterFt","rafterIn"].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("keydown", e => { if (e.key === "Enter") addSection(); });
+});
+</script>
+</body>
+</html>
